@@ -1,6 +1,3 @@
-// This is your Prisma schema file
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,364 +7,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User management
-model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  username        String?   @unique
-  firstName       String?
-  lastName        String?
-  phoneNumber     String?
-  dateOfBirth     DateTime?
-  profileImageUrl String?
-  isEmailVerified Boolean   @default(false)
-  isActive        Boolean   @default(true)
-  passwordHash    String
-
-  // Timestamps
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  lastLoginAt DateTime?
-  reports     Report[]  @relation("UserReports")
-
-  // Relations
-  posts           Post[]
-  comments        Comment[]
-  likes           Like[]
-  follows         Follow[]         @relation("UserFollows")
-  followers       Follow[]         @relation("UserFollowers")
-  notifications   Notification[]
-  userSessions    UserSession[]
-  passwordResets  PasswordReset[]
-  userPreferences UserPreferences?
-
-  @@map("users")
+enum UserRole {
+  BUYER
+  SELLER
+  ADMIN
 }
 
-// User preferences and settings
-model UserPreferences {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Notification preferences
-  emailNotifications Boolean @default(true)
-  pushNotifications  Boolean @default(true)
-  smsNotifications   Boolean @default(false)
-
-  // Privacy settings
-  profileVisibility Visibility @default(PUBLIC)
-  allowMessaging    Boolean    @default(true)
-  allowTagging      Boolean    @default(true)
-
-  // App preferences
-  language String @default("en")
-  timezone String @default("UTC")
-  theme    Theme  @default(LIGHT)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("user_preferences")
+enum OrderStatus {
+  PENDING
+  RESERVED
+  PAID
+  CANCELLED
+  COMPLETED
 }
 
-// User authentication sessions
-model UserSession {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  sessionToken String  @unique
-  refreshToken String? @unique
-  deviceInfo   String?
-  ipAddress    String?
-  userAgent    String?
-
-  isActive   Boolean  @default(true)
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  lastUsedAt DateTime @default(now())
-
-  @@map("user_sessions")
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
 }
 
-// Password reset functionality
-model PasswordReset {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  token     String    @unique
-  expiresAt DateTime
-  isUsed    Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  usedAt    DateTime?
-
-  @@map("password_resets")
-}
-
-// Posts and content
-model Post {
-  id       String @id @default(cuid())
-  authorId String
-  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
-
-  title     String?
-  content   String
-  imageUrls String[]
-  videoUrl  String?
-
-  // Post metadata
-  viewCount   Int     @default(0)
-  shareCount  Int     @default(0)
-  isPublished Boolean @default(true)
-  isPinned    Boolean @default(false)
-
-  // Content moderation
-  isReported Boolean @default(false)
-  isDeleted  Boolean @default(false)
-
-  // Timestamps
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  publishedAt DateTime?
-  deletedAt   DateTime?
-
-  // Relations
-  comments Comment[]
-  likes    Like[]
-  tags     PostTag[]
-  reports  Report[]
-
-  @@map("posts")
-}
-
-// Comments on posts
-model Comment {
-  id       String @id @default(cuid())
-  postId   String
-  post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
-  authorId String
-  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
-
-  content  String
-  parentId String? // For nested comments/replies
-  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
-  replies  Comment[] @relation("CommentReplies")
-
-  // Moderation
-  isReported Boolean @default(false)
-  isDeleted  Boolean @default(false)
-
-  // Timestamps
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  // Relations
-  likes   Like[]
-  reports Report[]
-
-  @@map("comments")
-}
-
-// Likes system (for posts and comments)
-model Like {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Polymorphic relations
-  postId    String?
-  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  commentId String?
-  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  // Ensure user can only like a post/comment once
-  @@unique([userId, postId])
-  @@unique([userId, commentId])
-  @@map("likes")
-}
-
-// Follow system
-model Follow {
-  id          String @id @default(cuid())
-  followerId  String
-  follower    User   @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
-  followingId String
-  following   User   @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  // Prevent duplicate follows
-  @@unique([followerId, followingId])
-  @@map("follows")
-}
-
-// Tags for categorizing posts
-model Tag {
-  id          String  @id @default(cuid())
-  name        String  @unique
-  slug        String  @unique
-  description String?
-  color       String? // Hex color code
-
-  isActive   Boolean @default(true)
-  usageCount Int     @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  posts PostTag[]
-
-  @@map("tags")
-}
-
-// Many-to-many relation between posts and tags
-model PostTag {
-  id     String @id @default(cuid())
-  postId String
-  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
-  tagId  String
-  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@unique([postId, tagId])
-  @@map("post_tags")
-}
-
-// Notification system
-model Notification {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  type    NotificationType
-  title   String
-  message String
-  data    Json? // Additional data payload
-
-  // Reference to related entities
-  relatedUserId String? // For follow notifications
-  relatedPostId String? // For like/comment notifications
-
-  // Status
-  isRead      Boolean @default(false)
-  isDelivered Boolean @default(false)
-
-  // Timestamps
-  createdAt   DateTime  @default(now())
-  readAt      DateTime?
-  deliveredAt DateTime?
-  expiresAt   DateTime?
-
-  @@map("notifications")
-}
-
-// Content reporting system
-model Report {
-  id         String @id @default(cuid())
-  reporterId String
-  reporter   User   @relation("UserReports", fields: [reporterId], references: [id], onDelete: Cascade)
-
-  // What is being reported
-  postId    String?
-  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  commentId String?
-  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
-
-  reason      ReportReason
-  description String?
-  status      ReportStatus @default(PENDING)
-
-  // Admin handling
-  reviewedById String?
-  reviewedAt   DateTime?
-  resolution   String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("reports")
-}
-
-// File uploads and media management
-model Media {
-  id           String  @id @default(cuid())
-  filename     String
-  originalName String
-  mimeType     String
-  size         Int
-  url          String
-  thumbnailUrl String?
-
-  // Metadata
-  width    Int?
-  height   Int?
-  duration Int? // For videos in seconds
-
-  // Organization
-  folder String?
-  tags   String[]
-
-  // Status
-  isProcessed Boolean @default(false)
-  isPublic    Boolean @default(true)
-
-  // Timestamps
-  uploadedAt DateTime @default(now())
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@map("media")
-}
-
-// App configuration and settings
-model AppConfig {
-  id          String     @id @default(cuid())
-  key         String     @unique
-  value       String
-  type        ConfigType @default(STRING)
-  description String?
-
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("app_config")
-}
-
-// Analytics and metrics
-model Analytics {
-  id        String  @id @default(cuid())
-  eventType String // 'page_view', 'user_action', 'error', etc.
-  eventName String
-  userId    String?
-  sessionId String?
-
-  // Event data
-  properties Json?
-  userAgent  String?
-  ipAddress  String?
-  referrer   String?
-
-  // Timestamps
-  timestamp DateTime @default(now())
-  createdAt DateTime @default(now())
-
-  @@index([eventType, timestamp])
-  @@index([userId, timestamp])
-  @@map("analytics")
-}
-
-// Enums
 enum Visibility {
   PUBLIC
-  FRIENDS_ONLY
   PRIVATE
 }
 
@@ -377,34 +39,158 @@ enum Theme {
   SYSTEM
 }
 
-enum NotificationType {
-  LIKE
-  COMMENT
-  FOLLOW
-  MENTION
-  SYSTEM
-  PROMOTIONAL
-}
-
-enum ReportReason {
-  SPAM
-  HARASSMENT
-  INAPPROPRIATE_CONTENT
-  COPYRIGHT_VIOLATION
-  MISINFORMATION
-  OTHER
-}
-
-enum ReportStatus {
-  PENDING
-  UNDER_REVIEW
-  RESOLVED
-  DISMISSED
-}
-
 enum ConfigType {
   STRING
   NUMBER
   BOOLEAN
   JSON
+}
+
+model User {
+  id              String           @id @default(cuid())
+  email           String           @unique
+  passwordHash    String
+  firstName       String
+  lastName        String
+  phoneNumber     String?
+  role            UserRole         @default(BUYER)
+  isVerified      Boolean          @default(false) // New Field: OTP or Email Verified
+  verifiedAt      DateTime? // Timestamp of verification
+  shops           Shop[] // Shops owned (if seller)
+  orders          Order[] // Orders/bookings made
+  userPreferences UserPreferences?
+  userSessions    UserSession[]
+  passwordResets  PasswordReset[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Shop {
+  id          String    @id @default(cuid())
+  name        String
+  address     String
+  description String?
+  imageUrl    String?
+  ownerId     String
+  owner       User      @relation(fields: [ownerId], references: [id])
+  items       Item[]
+  isVerified  Boolean   @default(false) // New Field: Shop verified status
+  verifiedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Item {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  quantity    Int // In stock
+  shopId      String
+  shop        Shop        @relation(fields: [shopId], references: [id])
+  imageUrl    String?
+  isActive    Boolean     @default(true)
+  isVerified  Boolean     @default(false) // New Field: Item verification (optional)
+  verifiedAt  DateTime?
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  orderItems    OrderItem[]
+  totalAmount   Float
+  status        OrderStatus @default(PENDING)
+  reservedUntil DateTime? // Reservation expiry
+  payment       Payment?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model OrderItem {
+  id       String @id @default(cuid())
+  orderId  String
+  itemId   String
+  quantity Int
+  order    Order  @relation(fields: [orderId], references: [id])
+  item     Item   @relation(fields: [itemId], references: [id])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  orderId       String        @unique
+  order         Order         @relation(fields: [orderId], references: [id])
+  amount        Float
+  status        PaymentStatus
+  provider      String // e.g., Stripe, Razorpay
+  transactionId String?
+  paidAt        DateTime?
+  receiptUrl    String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model UserPreferences {
+  id                 String     @id @default(cuid())
+  userId             String     @unique
+  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailNotifications Boolean    @default(true)
+  pushNotifications  Boolean    @default(true)
+  smsNotifications   Boolean    @default(false)
+  profileVisibility  Visibility @default(PUBLIC)
+  allowMessaging     Boolean    @default(true)
+  allowTagging       Boolean    @default(true)
+  language           String     @default("en")
+  timezone           String     @default("UTC")
+  theme              Theme      @default(LIGHT)
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  @@map("user_preferences")
+}
+
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionToken String   @unique
+  refreshToken String?  @unique
+  deviceInfo   String?
+  ipAddress    String?
+  userAgent    String?
+  isActive     Boolean  @default(true)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  lastUsedAt   DateTime @default(now())
+
+  @@map("user_sessions")
+}
+
+model PasswordReset {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique
+  expiresAt DateTime
+  isUsed    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  usedAt    DateTime?
+
+  @@map("password_resets")
+}
+
+model AppConfig {
+  id          String     @id @default(cuid())
+  key         String     @unique
+  value       String
+  type        ConfigType @default(STRING)
+  description String?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@map("app_config")
 }

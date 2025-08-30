@@ -1,5 +1,3 @@
-// Main application entry point
-// ...implement server logic here...
 const express = require('express');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
@@ -10,12 +8,13 @@ const { setupSecurity, rateLimiters } = require('./middleware/security');
 const { logger, httpLogger, requestIdMiddleware } = require('./middleware/logger');
 const { globalErrorHandler, handleNotFound } = require('./middleware/errorHandler');
 
-// Import routes
+// Import marketplace-specific routes
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
-const postRoutes = require('./routes/post');
-const commentRoutes = require('./routes/comment');
-const notificationRoutes = require('./routes/notification');
+const shopRoutes = require('./routes/shop');
+const itemRoutes = require('./routes/item');
+const orderRoutes = require('./routes/order');
+const paymentRoutes = require('./routes/payment');
 
 class Server {
   constructor() {
@@ -106,9 +105,10 @@ class Server {
         endpoints: {
           auth: '/api/auth',
           users: '/api/users',
-          posts: '/api/posts',
-          comments: '/api/comments',
-          notifications: '/api/notifications'
+          shops: '/api/shops',
+          items: '/api/items',
+          orders: '/api/orders',
+          payments: '/api/payments'
         }
       });
     });
@@ -116,12 +116,13 @@ class Server {
     // Rate limiting for API routes
     this.app.use('/api', rateLimiters.api);
 
-    // API routes
+    // API routes for marketplace app
     this.app.use('/api/auth', authRoutes);
     this.app.use('/api/users', userRoutes);
-    this.app.use('/api/posts', postRoutes);
-    this.app.use('/api/comments', commentRoutes);
-    this.app.use('/api/notifications', notificationRoutes);
+    this.app.use('/api/shops', shopRoutes);
+    this.app.use('/api/items', itemRoutes);
+    this.app.use('/api/orders', orderRoutes);
+    this.app.use('/api/payments', paymentRoutes);
 
     // Serve static files (for uploaded images, etc.)
     this.app.use('/uploads', express.static('uploads', {
