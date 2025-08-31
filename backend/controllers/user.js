@@ -65,6 +65,64 @@ class UserController {
     });
   });
 
+    // Register user
+    register = catchAsync(async (req, res, next) => {
+      const { email, password, username, firstName, lastName } = req.body;
+      if (!email || !password || !username) {
+        return next(new AppError('Missing required fields', 400));
+      }
+      const existingUser = await prisma.user.findFirst({ where: { email } });
+      if (existingUser) {
+        return next(new AppError('Email already registered', 409));
+      }
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = await prisma.user.create({
+        data: { email, password: hashedPassword, username, firstName, lastName, isActive: true }
+      });
+      res.status(201).json({ success: true, message: 'User registered', data: { user: { id: user.id, email: user.email, username: user.username } } });
+    });
+
+    // Login user
+    login = catchAsync(async (req, res, next) => {
+      const { email, password } = req.body;
+      if (!email || !password) {
+        return next(new AppError('Missing email or password', 400));
+      }
+      const user = await prisma.user.findFirst({ where: { email, isActive: true } });
+      if (!user) {
+        return next(new AppError('Invalid credentials', 401));
+      }
+      const valid = await bcrypt.compare(password, user.password);
+      if (!valid) {
+        return next(new AppError('Invalid credentials', 401));
+      }
+      // For demo, just return user info (add JWT logic as needed)
+      res.json({ success: true, message: 'Login successful', data: { user: { id: user.id, email: user.email, username: user.username } } });
+    });
+
+    // Get profile
+    getProfile = catchAsync(async (req, res, next) => {
+      const userId = req.user?.id;
+      if (!userId) {
+        return next(new AppError('Unauthorized', 401));
+      }
+      const user = await prisma.user.findFirst({
+        where: { id: userId, isActive: true },
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          firstName: true,
+          lastName: true,
+          profileImageUrl: true,
+          createdAt: true
+        }
+      });
+      if (!user) {
+        return next(new AppError('User not found', 404));
+      }
+      res.json({ success: true, data: { user } });
+    });
   // Get user by ID
   getUserById = catchAsync(async (req, res, next) => {
     const { id } = req.params;
