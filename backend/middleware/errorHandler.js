@@ -1,6 +1,6 @@
 // Global error handling middleware
 // ...implement error handling here...
-const { logger } = require('./logger');
+import { logger } from './logger.js';
 
 // Custom error class
 class AppError extends Error {
@@ -121,7 +121,7 @@ const handleNotFound = (req, res, next) => {
   next(error);
 };
 
-module.exports = {
+export {
   AppError,
   globalErrorHandler,
   catchAsync,

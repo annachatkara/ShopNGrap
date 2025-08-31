@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const { logger } = require('../middleware/logger');
+import { PrismaClient } from '@prisma/client';
+import { logger } from '../middleware/logger.js';
 
 // Global for Prisma client to avoid multiple instances
 const globalForPrisma = global;
@@ -70,7 +70,7 @@ const disconnectDB = async () => {
   }
 };
 
-module.exports = {
+export {
   prisma,
   connectDB,
   disconnectDB

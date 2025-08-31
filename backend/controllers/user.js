@@ -1,9 +1,9 @@
 // User management logic
 // ...implement user management logic here...
-const { prisma } = require('../config/database');
-const { catchAsync, AppError } = require('../middleware/errorHandler');
-const { logger } = require('../middleware/logger');
-const bcrypt = require('bcrypt');
+import { prisma } from '../config/database.js';
+import { catchAsync, AppError } from '../middleware/errorHandler.js';
+import { logger } from '../middleware/logger.js';
+import bcrypt from 'bcrypt';
 
 class UserController {
   // Get all users (with pagination and search)
@@ -514,4 +514,4 @@ class UserController {
   });
 }
 
-module.exports = new UserController();
+export default new UserController();

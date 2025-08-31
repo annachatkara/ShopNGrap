@@ -1,11 +1,11 @@
 // Authentication logic
 // ...implement authentication logic here...
-const bcrypt = require('bcrypt');
-const crypto = require('crypto');
-const { prisma } = require('../config/database');
-const { catchAsync, AppError } = require('../middleware/errorHandler');
-const { generateToken, generateRefreshToken } = require('../middleware/auth');
-const { logger } = require('../middleware/logger');
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+import { prisma } from '../config/database.js';
+import { catchAsync, AppError } from '../middleware/errorHandler.js';
+import { generateToken, generateRefreshToken } from '../middleware/auth.js';
+import { logger } from '../middleware/logger.js';
 
 class AuthController {
   // Register new user
@@ -435,4 +435,4 @@ class AuthController {
   });
 }
 
-module.exports = new AuthController();
+export default new AuthController();

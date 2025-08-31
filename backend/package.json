@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Backend API for Flutter application using Node.js, Express, and Prisma",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",

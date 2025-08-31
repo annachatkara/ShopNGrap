@@ -1,9 +1,9 @@
 // JWT authentication middleware
 // ...implement JWT authentication here...
-const jwt = require('jsonwebtoken');
-const { prisma } = require('../config/database');
-const { AppError, catchAsync } = require('./errorHandler');
-const { logger } = require('./logger');
+import jwt from 'jsonwebtoken';
+import { prisma } from '../config/database.js';
+import { AppError, catchAsync } from './errorHandler.js';
+import { logger } from './logger.js';
 
 // Generate JWT token
 const generateToken = (payload) => {
@@ -195,7 +195,7 @@ const createRateLimiter = (windowMs = 15 * 60 * 1000, max = 100, message) => {
   });
 };
 
-module.exports = {
+export {
   generateToken,
   generateRefreshToken,
   verifyToken,

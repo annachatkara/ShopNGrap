@@ -1,5 +1,5 @@
-const { prisma } = require('../config/database');
-const { catchAsync, AppError } = require('../middleware/errorHandler');
+import { prisma } from '../config/database.js';
+import { catchAsync, AppError } from '../middleware/errorHandler.js';
 
 class ShopController {
   createShop = catchAsync(async (req, res) => {
@@ -28,4 +28,4 @@ class ShopController {
   });
 }
 
-module.exports = new ShopController();
+export default new ShopController();

@@ -1,7 +1,7 @@
 // Input validation rules middleware
 // ...implement validation rules here...
-const { body, param, query, validationResult } = require('express-validator');
-const { AppError } = require('./errorHandler');
+import { body, param, query, validationResult } from 'express-validator';
+import { AppError } from './errorHandler.js';
 
 // Handle validation errors
 const handleValidationErrors = (req, res, next) => {
@@ -182,7 +182,7 @@ const validationRules = {
   ]
 };
 
-module.exports = {
+export {
   validators,
   validationRules,
   handleValidationErrors

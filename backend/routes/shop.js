@@ -1,6 +1,6 @@
-const express = require('express');
-const shopController = require('../controllers/shop');
-const { verifyToken, restrictTo } = require('../middleware/auth');
+import express from 'express';
+import shopController from '../controllers/shop.js';
+import { verifyToken, restrictTo } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -8,4 +8,4 @@ router.get('/', shopController.getShops);
 router.get('/:id', shopController.getShopById);
 router.post('/', verifyToken, restrictTo('SELLER'), shopController.createShop);
 
-module.exports = router;
+export default router;

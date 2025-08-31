@@ -1,10 +1,10 @@
-const express = require('express');
-const paymentController = require('../controllers/payment');
-const { verifyToken } = require('../middleware/auth');
+import express from 'express';
+import paymentController from '../controllers/payment.js';
+import { verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
 router.post('/', verifyToken, paymentController.createPayment);
 router.get('/order/:orderId', verifyToken, paymentController.getPaymentByOrder);
 
-module.exports = router;
+export default router;

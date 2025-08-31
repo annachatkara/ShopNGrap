@@ -1,5 +1,5 @@
-const { prisma } = require('../config/database');
-const { catchAsync, AppError } = require('../middleware/errorHandler');
+import { prisma } from '../config/database.js';
+import { catchAsync, AppError } from '../middleware/errorHandler.js';
 
 class PaymentController {
   createPayment = catchAsync(async (req, res) => {
@@ -30,4 +30,4 @@ class PaymentController {
   });
 }
 
-module.exports = new PaymentController();
+export default new PaymentController();

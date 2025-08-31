@@ -1,9 +1,9 @@
 // Security configurations middleware
 // ...implement security configurations here...
-const helmet = require('helmet');
-const cors = require('cors');
-const compression = require('compression');
-const { createRateLimiter } = require('./auth');
+import helmet from 'helmet';
+import cors from 'cors';
+import compression from 'compression';
+import { createRateLimiter } from './auth.js';
 
 // CORS configuration
 const corsOptions = {
@@ -74,7 +74,7 @@ const setupSecurity = (app) => {
   app.use('/api/', rateLimiters.api);
 };
 
-module.exports = {
+export {
   setupSecurity,
   corsOptions,
   rateLimiters

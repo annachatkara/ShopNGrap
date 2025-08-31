@@ -1,6 +1,7 @@
-const { prisma } = require('../config/database');
-const { catchAsync, AppError } = require('../middleware/errorHandler');
-const crypto = require('crypto');
+import { prisma } from '../config/database.js';
+import { catchAsync, AppError } from '../middleware/errorHandler.js';
+import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 
 class OtpController {
   // Send OTP (simulated)
@@ -54,7 +55,6 @@ class OtpController {
     if (existingUser) throw new AppError('User already exists', 409);
 
     // Hash password
-    const bcrypt = require('bcrypt');
     const passwordHash = await bcrypt.hash(password, 12);
 
     // Create user
@@ -72,4 +72,4 @@ class OtpController {
   });
 }
 
-module.exports = new OtpController();
+export default new OtpController();

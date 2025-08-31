@@ -1,10 +1,10 @@
 // Authentication routes
 // ...define authentication routes here...
-const express = require('express');
-const authController = require('../controllers/auth');
-const { validationRules } = require('../middleware/validation');
-const { verifyToken} = require('../middleware/auth');
-const { rateLimiters } = require('../middleware/security');
+import express from 'express';
+import authController from '../controllers/auth.js';
+import { validationRules } from '../middleware/validation.js';
+import { verifyToken } from '../middleware/auth.js';
+import { rateLimiters } from '../middleware/security.js';
 const router = express.Router();
 
 // Public routes (with rate limiting for security)
@@ -47,4 +47,4 @@ router.post('/change-password',
   authController.changePassword
 );
 
-module.exports = router;
+export default router;

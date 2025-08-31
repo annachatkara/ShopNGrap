@@ -1,5 +1,5 @@
-const { prisma } = require('../config/database');
-const { AppError } = require('./errorHandler');
+import { prisma } from '../config/database.js';
+import { AppError } from './errorHandler.js';
 
 const checkVerified = async (req, res, next) => {
   try {
@@ -27,4 +27,4 @@ const checkVerified = async (req, res, next) => {
   }
 };
 
-module.exports = checkVerified;
+export default checkVerified;

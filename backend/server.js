@@ -1,20 +1,21 @@
-const express = require('express');
-const cookieParser = require('cookie-parser');
-require('dotenv').config();
+import express from 'express';
+import cookieParser from 'cookie-parser';
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Import configurations and middleware
-const { connectDB, disconnectDB } = require('./config/database');
-const { setupSecurity, rateLimiters } = require('./middleware/security');
-const { logger, httpLogger, requestIdMiddleware } = require('./middleware/logger');
-const { globalErrorHandler, handleNotFound } = require('./middleware/errorHandler');
+import { connectDB, disconnectDB } from './config/database.js';
+import { setupSecurity, rateLimiters } from './middleware/security.js';
+import { logger, httpLogger, requestIdMiddleware } from './middleware/logger.js';
+import { globalErrorHandler, handleNotFound } from './middleware/errorHandler.js';
 
 // Import marketplace-specific routes
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/user');
-const shopRoutes = require('./routes/shop');
-const itemRoutes = require('./routes/item');
-const orderRoutes = require('./routes/order');
-const paymentRoutes = require('./routes/payment');
+import authRoutes from './routes/auth.js';
+import userRoutes from './routes/user.js';
+import shopRoutes from './routes/shop.js';
+import itemRoutes from './routes/item.js';
+import orderRoutes from './routes/order.js';
+import paymentRoutes from './routes/payment.js';
 
 class Server {
   constructor() {
@@ -238,9 +239,9 @@ class Server {
 }
 
 // Start server if this file is run directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const server = new Server();
   server.start();
 }
 
-module.exports = Server;
+export default Server;
