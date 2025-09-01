@@ -1,3 +1,0 @@
-// Post operations logic
-// ...implement post operations logic here...
-export default {};

@@ -1,3 +1,0 @@
-// Comment management logic
-// ...implement comment management logic here...
-export default {};

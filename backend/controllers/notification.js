@@ -1,3 +1,0 @@
-// Notification handling logic
-// ...implement notification handling logic here...
-export default {};

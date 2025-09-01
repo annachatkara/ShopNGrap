@@ -1,3 +1,0 @@
-// Notification routes
-// ...define notification routes here...
-export default {};

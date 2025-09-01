@@ -1,3 +1,0 @@
-// Comment routes
-// ...define comment routes here...
-export default {};

@@ -1,196 +1,202 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  BUYER
-  SELLER
-  ADMIN
-}
-
-enum OrderStatus {
-  PENDING
-  RESERVED
-  PAID
-  CANCELLED
-  COMPLETED
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  FAILED
-  REFUNDED
-}
-
-enum Visibility {
-  PUBLIC
-  PRIVATE
-}
-
-enum Theme {
-  LIGHT
-  DARK
-  SYSTEM
-}
-
-enum ConfigType {
-  STRING
-  NUMBER
-  BOOLEAN
-  JSON
+generator client {
+  provider = "prisma-client-js"
 }
 
 model User {
-  id              String           @id @default(cuid())
-  email           String           @unique
-  passwordHash    String
-  firstName       String
-  lastName        String
-  phoneNumber     String?
-  role            UserRole         @default(BUYER)
-  isVerified      Boolean          @default(false) // New Field: OTP or Email Verified
-  verifiedAt      DateTime? // Timestamp of verification
-  shops           Shop[] // Shops owned (if seller)
-  orders          Order[] // Orders/bookings made
-  userPreferences UserPreferences?
-  userSessions    UserSession[]
-  passwordResets  PasswordReset[]
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id           Int       @id @default(autoincrement())
+  name         String
+  email        String    @unique
+  passwordHash String
+  phone        String?
+  role         String    @default("customer") // customer, admin, superuser
+  isActive     Boolean   @default(true)
+  isBlocked    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  // Relations
+  addresses    Address[]
+  cart         Cart[]
+  orders       Order[]
+  reviews      Review[]
+  wishlist     Wishlist[]
+  adminLogs    AdminLog[]
+  
+  // Admin specific relations
+  shop         Shop?     @relation("ShopAdmin")
+  blockedBy    User?     @relation("BlockedUsers", fields: [blockedById], references: [id])
+  blockedById  Int?
+  blockedUsers User[]    @relation("BlockedUsers")
 }
 
 model Shop {
-  id          String    @id @default(cuid())
+  id          Int      @id @default(autoincrement())
   name        String
-  address     String
   description String?
-  imageUrl    String?
-  ownerId     String
-  owner       User      @relation(fields: [ownerId], references: [id])
-  items       Item[]
-  isVerified  Boolean   @default(false) // New Field: Shop verified status
-  verifiedAt  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  address     String?
+  phone       String?
+  email       String?
+  isActive    Boolean  @default(true)    // Shop active/inactive status
+  isVisible   Boolean  @default(true)    // Controls if customers can see shop products
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  admin       User     @relation("ShopAdmin", fields: [adminId], references: [id])
+  adminId     Int      @unique
+  products    Product[]
+  categories  Category[]
 }
 
-model Item {
-  id          String      @id @default(cuid())
+model Address {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  fullName   String
+  phone      String?
+  pincode    String
+  street     String
+  city       String
+  state      String
+  country    String   @default("India")
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  orders     Order[]
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  shop        Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shopId      Int
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@unique([name, shopId])
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
   name        String
   description String?
   price       Float
-  quantity    Int // In stock
-  shopId      String
-  shop        Shop        @relation(fields: [shopId], references: [id])
+  stock       Int
   imageUrl    String?
-  isActive    Boolean     @default(true)
-  isVerified  Boolean     @default(false) // New Field: Item verification (optional)
-  verifiedAt  DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  shop        Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shopId      Int
+  category    Category  @relation(fields: [categoryId], references: [id])
+  categoryId  Int
+  cart        Cart[]
   orderItems  OrderItem[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  reviews     Review[]
+  wishlist    Wishlist[]
+}
+
+model Cart {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, productId])
 }
 
 model Order {
-  id            String      @id @default(cuid())
-  userId        String
-  user          User        @relation(fields: [userId], references: [id])
-  orderItems    OrderItem[]
-  totalAmount   Float
-  status        OrderStatus @default(PENDING)
-  reservedUntil DateTime? // Reservation expiry
-  payment       Payment?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id          Int          @id @default(autoincrement())
+  user        User         @relation(fields: [userId], references: [id])
+  userId      Int
+  address     Address      @relation(fields: [addressId], references: [id])
+  addressId   Int
+  totalAmount Float
+  status      String       @default("pending") // pending, confirmed, shipped, delivered, cancelled
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  orderItems  OrderItem[]
+  payments    Payment[]
 }
 
 model OrderItem {
-  id       String @id @default(cuid())
-  orderId  String
-  itemId   String
-  quantity Int
-  order    Order  @relation(fields: [orderId], references: [id])
-  item     Item   @relation(fields: [itemId], references: [id])
+  id        Int      @id @default(autoincrement())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   Int
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
+  quantity  Int
+  price     Float    // Price at time of order
 }
 
 model Payment {
-  id            String        @id @default(cuid())
-  orderId       String        @unique
-  order         Order         @relation(fields: [orderId], references: [id])
-  amount        Float
-  status        PaymentStatus
-  provider      String // e.g., Stripe, Razorpay
-  transactionId String?
-  paidAt        DateTime?
-  receiptUrl    String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id        Int      @id @default(autoincrement())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   Int
+  paymentId String?
+  method    String?
+  amount    Float
+  status    String   @default("pending") // pending, completed, failed, refunded
+  createdAt DateTime @default(now())
 }
 
-model UserPreferences {
-  id                 String     @id @default(cuid())
-  userId             String     @unique
-  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  emailNotifications Boolean    @default(true)
-  pushNotifications  Boolean    @default(true)
-  smsNotifications   Boolean    @default(false)
-  profileVisibility  Visibility @default(PUBLIC)
-  allowMessaging     Boolean    @default(true)
-  allowTagging       Boolean    @default(true)
-  language           String     @default("en")
-  timezone           String     @default("UTC")
-  theme              Theme      @default(LIGHT)
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
-
-  @@map("user_preferences")
+model Wishlist {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, productId])
 }
 
-model UserSession {
-  id           String   @id @default(cuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  sessionToken String   @unique
-  refreshToken String?  @unique
-  deviceInfo   String?
-  ipAddress    String?
-  userAgent    String?
-  isActive     Boolean  @default(true)
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
-  lastUsedAt   DateTime @default(now())
-
-  @@map("user_sessions")
+model Review {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int
+  rating    Int      @db.SmallInt // 1-5 rating
+  comment   String?
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, productId])
 }
 
-model PasswordReset {
-  id        String    @id @default(cuid())
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String    @unique
-  expiresAt DateTime
-  isUsed    Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  usedAt    DateTime?
-
-  @@map("password_resets")
+model Coupon {
+  id         Int      @id @default(autoincrement())
+  code       String   @unique
+  discount   Float
+  type       String   @default("percentage") // percentage, fixed
+  expiryDate DateTime
+  minOrder   Float    @default(0)
+  maxDiscount Float?  // Maximum discount amount for percentage type
+  usageLimit Int?     // Maximum number of times coupon can be used
+  usedCount  Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
 }
 
-model AppConfig {
-  id          String     @id @default(cuid())
-  key         String     @unique
-  value       String
-  type        ConfigType @default(STRING)
-  description String?
-  isActive    Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  @@map("app_config")
+model AdminLog {
+  id        Int      @id @default(autoincrement())
+  admin     User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  adminId   Int
+  action    String   // e.g., "CREATED_PRODUCT", "BLOCKED_USER", "UPDATED_SHOP"
+  details   String?  // Additional details about the action
+  targetId  Int?     // ID of the target entity (product, user, shop, etc.)
+  targetType String? // Type of target entity (product, user, shop, etc.)
+  createdAt DateTime @default(now())
 }

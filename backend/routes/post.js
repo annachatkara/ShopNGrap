@@ -1,3 +1,0 @@
-// Post routes
-// ...define post routes here...
-export default {};
