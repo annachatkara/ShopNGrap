@@ -18,6 +18,7 @@ import wishlistRoutes from './routes/wishlist.js';
 import reviewRoutes from './routes/reviews.js';
 import couponRoutes from './routes/coupons.js';
 import adminRoutes from './routes/admin.js';
+import adminRequestRoutes from './routes/adminRequests.js';
 
 // Import error handler
 import { errorHandler, notFound } from './middleware/errorHandler.js';
@@ -119,6 +120,7 @@ app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin-requests', adminRequestRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

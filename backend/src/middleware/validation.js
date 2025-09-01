@@ -255,3 +255,30 @@ export const validatePagination = [
     .withMessage('Limit must be between 1 and 100'),
   handleValidationErrors
 ];
+
+// Add this to your existing validation.js file
+export const validateAdminRequest = [
+  body('shopName')
+    .trim()
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Shop name must be between 2 and 100 characters'),
+  body('adminName')
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Admin name must be between 2 and 50 characters'),
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Description must be less than 500 characters'),
+  body('phone')
+    .optional()
+    .isMobilePhone('en-IN')
+    .withMessage('Please provide a valid Indian phone number'),
+  body('address')
+    .optional()
+    .trim()
+    .isLength({ max: 200 })
+    .withMessage('Address must be less than 200 characters'),
+  handleValidationErrors
+];
