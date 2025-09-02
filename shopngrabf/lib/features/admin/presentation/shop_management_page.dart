@@ -1,0 +1,1 @@
+// Shop management page UI
